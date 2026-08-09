@@ -1,4 +1,4 @@
-from repositories.workout_repositories import InMemoryWorkoutRepository
+from infrastructure.repositories.workout_repositories import InMemoryWorkoutRepository
 from services.workout_service import WorkoutService
 
 repository = InMemoryWorkoutRepository()

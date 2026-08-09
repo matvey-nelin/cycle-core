@@ -1,10 +1,13 @@
-import uvicorn
+import uvicorn  # noqa: I001
 from fastapi import FastAPI
 
 from api.endpoints.workout import router as workout_router
 from api.exception_handlers import domain_error_handler, service_error_handler
 from domain.exceptions import DomainError
 from services.exceptions import ServiceError
+
+from infrastructure.models.base import Base  # noqa: F401
+
 
 app = FastAPI()
 

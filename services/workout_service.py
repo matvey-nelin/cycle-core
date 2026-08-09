@@ -3,7 +3,7 @@ from uuid import UUID
 
 from domain.workout import Workout
 from domain.workout_set import WorkoutSet
-from repositories.workout_repositories import AbstractWorkoutRepository
+from infrastructure.repositories.workout_repositories import AbstractWorkoutRepository
 from services.exceptions import WorkoutNotFoundError
 
 

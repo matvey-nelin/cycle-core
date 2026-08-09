@@ -4,7 +4,7 @@ import pytest
 
 from domain.workout import Workout
 from domain.workout_set import WorkoutSet
-from repositories.workout_repositories import InMemoryWorkoutRepository
+from infrastructure.repositories.workout_repositories import InMemoryWorkoutRepository
 from services.exceptions import WorkoutNotFoundError
 from services.workout_service import WorkoutService
 

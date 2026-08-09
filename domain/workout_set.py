@@ -15,7 +15,6 @@ class WorkoutSet:
 
     planned_reps: int = field(default=0)
     planned_weight: float = field(default=0)
-
     actual_reps: int = field(default=0)
     actual_weight: float = field(default=0)
 

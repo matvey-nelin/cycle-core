@@ -3,7 +3,7 @@ import datetime
 import pytest
 
 from domain.workout import Workout
-from repositories.workout_repositories import InMemoryWorkoutRepository
+from infrastructure.repositories.workout_repositories import InMemoryWorkoutRepository
 
 
 class TestInMemoryWorkoutRepository:
