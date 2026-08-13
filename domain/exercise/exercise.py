@@ -1,15 +1,19 @@
 from dataclasses import dataclass, field
 from typing import Any
+from uuid import UUID
 
-from uuid_extensions import uuid7
+from uuid6 import uuid7
 
 
 @dataclass
 class Exercise:
-    _id: str = field(repr=False, init=False, default_factory=lambda: str(uuid7()))
+    _id: UUID = field(repr=False, init=False, default_factory=uuid7)  # without 'as_type' always returns UUID
     name: str
 
-    agonist_ids: list[str] | None = field(default_factory=list)
+    agonist_ids: list[UUID] | None = field(default_factory=list)
+
+    def __repr__(self) -> str:
+        return f"{__class__.__name__}({self.id=}, {self.name=})"
 
     def __setattr__(self, key: str, value: Any) -> None:
         match key:
@@ -25,10 +29,8 @@ class Exercise:
                 object.__setattr__(self, key, cleaned_value)
 
             case "agonist_ids":
-                if not isinstance(value, list) or not all(
-                    isinstance(item, str) for item in value
-                ):
-                    raise ValueError("'agonist_ids' must be list of the integer values")
+                if not isinstance(value, list) or not all(isinstance(item, UUID) for item in value):
+                    raise ValueError("'agonist_ids' must be list of the UUID values")
 
                 object.__setattr__(self, key, value)
 
@@ -36,5 +38,5 @@ class Exercise:
                 object.__setattr__(self, key, value)
 
     @property
-    def id(self) -> str:
+    def id(self) -> UUID:
         return self._id
