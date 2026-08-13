@@ -1,56 +1,69 @@
 import datetime
 from uuid import UUID
 
-from domain.workout import Workout
-from domain.workout_set import WorkoutSet
-from infrastructure.repositories.workout_repositories import AbstractWorkoutRepository
-from services.exceptions import WorkoutNotFoundError
+from domain.exceptions import IncorrectWorkoutSetIdError
+from domain.workout.workout import Workout
+from services.abstract_unit_of_work import AbstractUnitOfWork
+from services.exceptions import WorkoutNotFoundError, WorkoutSetNotFoundError
 
 
 class WorkoutService:
-    def __init__(self, repository: AbstractWorkoutRepository) -> None:
-        self.repository = repository
+    def __init__(self, unit_of_work: AbstractUnitOfWork) -> None:
+        self.uow = unit_of_work
 
-    def get_workout(self, workout_id: str | UUID) -> Workout:
-        workout = self.repository.get_by_id(str(workout_id))
-        if not workout:
-            raise WorkoutNotFoundError("Passed incorrect id")
+    async def get_workout(self, workout_id: UUID) -> Workout:
+        async with self.uow:
+            return await self._get_workout_or_raise(workout_id)
 
-        return workout
-
-    def create_workout(
+    async def create_workout(
         self,
         start_time: datetime.datetime | None = None,
         end_time: datetime.datetime | None = None,
-    ) -> str:
-        workout = Workout(
-            planned_start_time=start_time,
-            planned_end_time=end_time,
-            actual_start_time=start_time,
-            actual_end_time=end_time,
-        )
-        self.repository.add(workout)
-
+    ) -> UUID:
+        async with self.uow:
+            workout = Workout(
+                planned_start_time=start_time,
+                planned_end_time=end_time,
+                actual_start_time=start_time,
+                actual_end_time=end_time,
+            )
+            self.uow.workouts.create(workout)
+            await self.uow.commit()
         return workout.id
 
-    def create_workout_set(
+    async def create_workout_set(
         self,
-        workout_id: str | UUID,
-        exercise_id: str | UUID,
+        workout_id: UUID,
+        exercise_id: UUID,
         reps: int = 0,
         weight: float = 0,
-    ) -> None:
-        workout_set = WorkoutSet(
-            exercise_id=str(exercise_id),
-            planned_reps=reps,
-            planned_weight=weight,
-            actual_reps=reps,
-            actual_weight=weight,
-        )
+    ) -> UUID:
+        async with self.uow:
+            workout = await self._get_workout_or_raise(workout_id)
+            workout.add_set(
+                exercise_id=exercise_id,
+                planned_reps=reps,
+                planned_weight=weight,
+                actual_reps=reps,
+                actual_weight=weight,
+            )
+            await self.uow.workouts.update(workout)
+            await self.uow.commit()
+        return workout.sets[-1].id
 
-        workout = self.repository.get_by_id(str(workout_id))
-        if not workout:
+    async def remove_workout_set(self, workout_id: UUID, workout_set_id: UUID) -> None:
+        async with self.uow:
+            workout = await self._get_workout_or_raise(workout_id)
+            try:
+                workout.remove_set(workout_set_id)
+                await self.uow.workouts.update(workout)
+                await self.uow.commit()
+            except IncorrectWorkoutSetIdError:
+                raise WorkoutSetNotFoundError()
+
+    async def _get_workout_or_raise(self, workout_id: UUID) -> Workout:
+        """Method-helper without context"""
+        workout = await self.uow.workouts.get_by_id(workout_id)
+        if workout is None:
             raise WorkoutNotFoundError("Passed incorrect id")
-
-        workout.add_set(workout_set)
-        self.repository.add(workout)
+        return workout

@@ -1,0 +1,18 @@
+line-length = 120
+
+target-version = "py313"
+
+[lint]
+# Наборы правил. Дефолт ruff — только E4, E7, E9, F.
+# Этот набор шире: стиль, импорты, современная грамматика.
+select = [
+    "E",  # pycodestyle errors: стиль, отступы, длина строк (E501)
+    "W",  # pycodestyle warnings: лишние пробелы и т.п.
+    "F",  # pyflakes: неиспользуемые импорты, неопределённые имена
+    "I",  # isort: сортировка и группировка импортов
+    "UP", # pyupgrade: современная грамматика под target-version
+]
+
+[format]
+# Стиль формататора
+quote-style = "double"

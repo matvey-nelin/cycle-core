@@ -26,15 +26,15 @@ class WorkoutCreate(BaseModel):
         # Set timezone to utc if it's none or save as is
         if self.start_time:
             if self.start_time.tzinfo is None:
-                self.start_time = self.start_time.replace(tzinfo=datetime.timezone.utc)
+                self.start_time = self.start_time.replace(tzinfo=datetime.UTC)
             else:
-                self.start_time = self.start_time.astimezone(tz=datetime.timezone.utc)
+                self.start_time = self.start_time.astimezone(tz=datetime.UTC)
 
         if self.end_time:
             if self.end_time.tzinfo is None:
-                self.end_time = self.end_time.replace(tzinfo=datetime.timezone.utc)
+                self.end_time = self.end_time.replace(tzinfo=datetime.UTC)
             else:
-                self.end_time = self.end_time.astimezone(tz=datetime.timezone.utc)
+                self.end_time = self.end_time.astimezone(tz=datetime.UTC)
 
         return self
 
@@ -69,16 +69,10 @@ class WorkoutResponse(BaseModel):
 
     id: UUID7 = Field(examples=["019fcbf6-6d37-7264-b758-433859fb5e28"])
 
-    planned_start_time: datetime.datetime | None = Field(
-        examples=["2026-08-01T15:00:00Z"]
-    )
-    planned_end_time: datetime.datetime | None = Field(
-        examples=["2026-08-01T16:00:00Z"]
-    )
+    planned_start_time: datetime.datetime | None = Field(examples=["2026-08-01T15:00:00Z"])
+    planned_end_time: datetime.datetime | None = Field(examples=["2026-08-01T16:00:00Z"])
 
-    actual_start_time: datetime.datetime | None = Field(
-        examples=["2026-08-01T15:00:00Z"]
-    )
+    actual_start_time: datetime.datetime | None = Field(examples=["2026-08-01T15:00:00Z"])
     actual_end_time: datetime.datetime | None = Field(examples=["2026-08-01T16:00:00Z"])
 
     planned_tonnage: float = Field(examples=[1720, 1720.55])

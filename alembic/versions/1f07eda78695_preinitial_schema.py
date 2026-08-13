@@ -1,8 +1,8 @@
-"""preinitial schema
+"""preinitial_schema
 
-Revision ID: f142373e00f4
+Revision ID: 1f07eda78695
 Revises:
-Create Date: 2026-08-07 20:52:12.672700
+Create Date: 2026-08-12 10:23:23.840947
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "f142373e00f4"
+revision: str = "1f07eda78695"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -54,7 +54,7 @@ def upgrade() -> None:
     op.create_table(
         "workout_sets",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("order", sa.Integer(), nullable=True),
+        sa.Column("order", sa.Integer(), nullable=False),
         sa.Column("planned_reps", sa.Integer(), nullable=False),
         sa.Column("planned_weight", sa.Float(), nullable=False),
         sa.Column("actual_reps", sa.Integer(), nullable=False),

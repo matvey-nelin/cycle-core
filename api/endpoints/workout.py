@@ -10,31 +10,37 @@ router = APIRouter(prefix="/workouts", tags=["workouts"])
 
 
 @router.get("/{workout_id}", response_model=WorkoutResponse, status_code=200)
-def read_workout(
-    workout_id: UUID = Path(..., examples=["019fcbf6-6d37-7264-b758-433859fb5e28"]),  # noqa: B008
-    service: WorkoutService = Depends(get_workout_service),  # noqa: B008
+async def read_workout(
+    workout_id: UUID = Path(..., examples=["019fcbf6-6d37-7264-b758-433859fb5e28"]),
+    service: WorkoutService = Depends(get_workout_service),
 ):
-    return service.get_workout(workout_id)
+    return await service.get_workout(workout_id)
 
 
 @router.post("/", status_code=201)
-def create_workout(
+async def create_workout(
     workout: WorkoutCreate,
-    service: WorkoutService = Depends(get_workout_service),  # noqa: B008
+    service: WorkoutService = Depends(get_workout_service),
 ):
-    created_workout_id = service.create_workout(workout.start_time, workout.end_time)
-
+    created_workout_id = await service.create_workout(workout.start_time, workout.end_time)
     return {"status": "success", "workout_id": created_workout_id}
 
 
 @router.post("/{workout_id}/sets", status_code=201)
-def create_workout_set(
+async def create_workout_set(
     workout_set: WorkoutSetCreate,
-    workout_id: UUID = Path(..., examples=["019fcbf6-6d37-7264-b758-433859fb5e28"]),  # noqa: B008
-    service: WorkoutService = Depends(get_workout_service),  # noqa: B008
+    workout_id: UUID = Path(..., examples=["019fcbf6-6d37-7264-b758-433859fb5e28"]),
+    service: WorkoutService = Depends(get_workout_service),
 ):
-    service.create_workout_set(
-        workout_id, workout_set.exercise_id, workout_set.reps, workout_set.weight
-    )
+    await service.create_workout_set(workout_id, workout_set.exercise_id, workout_set.reps, workout_set.weight)
+    return {"status": "success"}
 
+
+@router.delete("/{workout_id}/sets/{workout_set_id}", status_code=204)
+async def remove_workout_set(
+    workout_id: UUID = Path(..., examples=["019fcbf6-6d37-7264-b758-433859fb5e28"]),
+    workout_set_id: UUID = Path(..., examples=["019fcbf6-6d37-7264-b758-433859fb5e28"]),
+    service: WorkoutService = Depends(get_workout_service),
+):
+    await service.remove_workout_set(workout_id, workout_set_id)
     return {"status": "success"}
