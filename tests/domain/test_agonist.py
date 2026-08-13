@@ -1,6 +1,6 @@
 import pytest
 
-from domain.agonist import Agonist
+from domain.agonist.agonist import Agonist
 
 
 class TestAgonist:
@@ -31,9 +31,7 @@ class TestAgonist:
     @pytest.mark.parametrize(
         "name, result_name",
         [
-            pytest.param(
-                "Pectoralis major", "Pectoralis major", id="normal_name_passes"
-            ),
+            pytest.param("Pectoralis major", "Pectoralis major", id="normal_name_passes"),
             pytest.param("A", "A", id="1_character_name_passes"),
             pytest.param("A" * 100, "A" * 100, id="100_characters_name_passes"),
         ],
@@ -49,12 +47,8 @@ class TestAgonist:
             pytest.param("Pectoralis major ", "Pectoralis major", id="trailing_space"),
             pytest.param("\tPectoralis major", "Pectoralis major", id="leading_tab"),
             pytest.param("Pectoralis major\t", "Pectoralis major", id="trailing_tab"),
-            pytest.param(
-                "\nPectoralis major", "Pectoralis major", id="leading_newline"
-            ),
-            pytest.param(
-                "Pectoralis major\n", "Pectoralis major", id="trailing_newline"
-            ),
+            pytest.param("\nPectoralis major", "Pectoralis major", id="leading_newline"),
+            pytest.param("Pectoralis major\n", "Pectoralis major", id="trailing_newline"),
         ],
     )
     def test_name_correct_striped(self, name: str, result_name: str):
@@ -84,9 +78,7 @@ class TestAgonist:
             ),
         ],
     )
-    def test_name_striped_after_changes(
-        self, initial_name: str, changed_name: str, result_name: str
-    ):
+    def test_name_striped_after_changes(self, initial_name: str, changed_name: str, result_name: str):
         agonist = Agonist(initial_name)
         agonist.name = changed_name
         assert agonist.name == result_name

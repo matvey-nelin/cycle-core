@@ -1,8 +1,15 @@
 from typing import Any
+from uuid import UUID
 
 import pytest
+from uuid6 import uuid7
 
-from domain.exercise import Exercise
+from domain.exercise.exercise import Exercise
+
+DETERMINED_UUID_1 = uuid7()
+DETERMINED_UUID_2 = uuid7()
+DETERMINED_UUID_3 = uuid7()
+DETERMINED_UUID_4 = uuid7()
 
 
 class TestExercise:
@@ -60,18 +67,12 @@ class TestExercise:
     @pytest.mark.parametrize(
         "initial_name, changed_name, result_name",
         [
-            pytest.param(
-                "Bench press", "Bench press ", "Bench press", id="trailing_space"
-            ),
-            pytest.param(
-                "Bench press", " Bench press", "Bench press", id="leading_space"
-            ),
+            pytest.param("Bench press", "Bench press ", "Bench press", id="trailing_space"),
+            pytest.param("Bench press", " Bench press", "Bench press", id="leading_space"),
             pytest.param("Bench press", "\tBench press\t", "Bench press", id="tabs"),
         ],
     )
-    def test_name_striped_after_changes(
-        self, initial_name: str, changed_name: str, result_name: str
-    ):
+    def test_name_striped_after_changes(self, initial_name: str, changed_name: str, result_name: str):
         exercise = Exercise(initial_name)
         exercise.name = changed_name
         assert exercise.name == result_name
@@ -94,17 +95,22 @@ class TestExercise:
         [
             pytest.param("Pull-ups", None, [], id="none_agonist_ids_value"),
             pytest.param("Pull-ups", [], [], id="empty_list_agonist_ids_value"),
-            pytest.param("Pull-ups", ["e1"], ["e1"], id="1_element_agonist_ids_value"),
             pytest.param(
                 "Pull-ups",
-                ["e1", "e2", "e3"],
-                ["e1", "e2", "e3"],
+                [DETERMINED_UUID_1],
+                [DETERMINED_UUID_1],
+                id="1_element_agonist_ids_value",
+            ),
+            pytest.param(
+                "Pull-ups",
+                [DETERMINED_UUID_1, DETERMINED_UUID_2, DETERMINED_UUID_3],
+                [DETERMINED_UUID_1, DETERMINED_UUID_2, DETERMINED_UUID_3],
                 id="few_elements_agonist_ids_value",
             ),
         ],
     )
     def test_exercise_can_be_with_and_without_agonists(
-        self, name: str, agonist_ids: list[str] | None, result_agonist_ids: list[str]
+        self, name: str, agonist_ids: list[UUID] | None, result_agonist_ids: list[UUID]
     ):
         if agonist_ids is None:
             exercise = Exercise(name)
@@ -128,18 +134,18 @@ class TestExercise:
     @pytest.mark.parametrize(
         "initial_agonist_ids_value, changed_agonist_ids_value",
         [
-            pytest.param(["e1"], None, id="none_in_changed_agonist_ids"),
-            pytest.param(["e1"], 1, id="int_in_changed_agonist_ids"),
-            pytest.param(["e1"], [1, 2], id="list_of_integers_in_changed_agonist_ids"),
+            pytest.param([DETERMINED_UUID_1], None, id="none_in_changed_agonist_ids"),
+            pytest.param([DETERMINED_UUID_1], 1, id="int_in_changed_agonist_ids"),
+            pytest.param([DETERMINED_UUID_1], [1, 2], id="list_of_integers_in_changed_agonist_ids"),
             pytest.param(
-                ["e1"],
+                [DETERMINED_UUID_1],
                 ["String", 10],
                 id="list_with_mixed_values_in_changed_agonist_ids",
             ),
         ],
     )
     def test_agonist_ids_value_changed_to_incorrect_value(
-        self, initial_agonist_ids_value: list[str], changed_agonist_ids_value: Any
+        self, initial_agonist_ids_value: list[UUID], changed_agonist_ids_value: Any
     ):
         exercise = Exercise("Bench press", initial_agonist_ids_value)
 
@@ -150,21 +156,24 @@ class TestExercise:
         "initial_agonist_ids_value, changed_agonist_ids_value, result_agonist_ids_value",
         [
             pytest.param(
-                ["e1", "e2", "e3"], [], [], id="empty_list_in_changed_agonist_ids"
+                [DETERMINED_UUID_1, DETERMINED_UUID_2, DETERMINED_UUID_3],
+                [],
+                [],
+                id="empty_list_in_changed_agonist_ids",
             ),
             pytest.param(
-                ["e1", "e2", "e3"],
-                ["e4"],
-                ["e4"],
+                [DETERMINED_UUID_1, DETERMINED_UUID_2, DETERMINED_UUID_3],
+                [DETERMINED_UUID_4],
+                [DETERMINED_UUID_4],
                 id="list_with_1_string_in_changed_agonist_ids",
             ),
         ],
     )
     def test_agonist_ids_value_changed_to_correct_value(
         self,
-        initial_agonist_ids_value: list[str],
+        initial_agonist_ids_value: list[UUID],
         changed_agonist_ids_value: Any,
-        result_agonist_ids_value: list[str],
+        result_agonist_ids_value: list[UUID],
     ):
         exercise = Exercise("Bench press", initial_agonist_ids_value)
         exercise.agonist_ids = changed_agonist_ids_value
