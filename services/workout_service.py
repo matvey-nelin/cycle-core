@@ -3,6 +3,7 @@ from uuid import UUID
 
 from domain.exceptions import IncorrectWorkoutSetIdError
 from domain.workout.workout import Workout
+from infrastructure.repositories.exceptions import IncorrectWorkoutIdError
 from services.abstract_unit_of_work import AbstractUnitOfWork
 from services.exceptions import WorkoutNotFoundError, WorkoutSetNotFoundError
 
@@ -47,8 +48,11 @@ class WorkoutService:
                 actual_reps=reps,
                 actual_weight=weight,
             )
-            await self.uow.workouts.update(workout)
-            await self.uow.commit()
+            try:
+                await self.uow.workouts.update(workout)
+                await self.uow.commit()
+            except IncorrectWorkoutIdError as _ex:
+                raise WorkoutNotFoundError(_ex.message)
         return workout.sets[-1].id
 
     async def remove_workout_set(self, workout_id: UUID, workout_set_id: UUID) -> None:
@@ -60,6 +64,8 @@ class WorkoutService:
                 await self.uow.commit()
             except IncorrectWorkoutSetIdError:
                 raise WorkoutSetNotFoundError()
+            except IncorrectWorkoutIdError as _ex:
+                raise WorkoutNotFoundError(_ex.message)
 
     async def _get_workout_or_raise(self, workout_id: UUID) -> Workout:
         """Method-helper without context"""

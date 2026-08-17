@@ -5,10 +5,10 @@ from sqlalchemy import text
 from uuid6 import uuid7
 
 from domain.workout.workout import Workout, WorkoutSet
+from infrastructure.repositories.exceptions import IncorrectWorkoutIdError
 from infrastructure.repositories.workout.sqlalchemy_workout_repository import (
     SQLAlchemyWorkoutRepository,
 )
-from services.exceptions import WorkoutNotFoundError
 
 DETERMINED_UUID_1 = uuid7()
 DETERMINED_UUID_2 = uuid7()
@@ -272,7 +272,7 @@ class TestWorkoutRepository:
     async def test_update_non_existent_workout(self, session_factory):
         workout = Workout()
 
-        with pytest.raises(WorkoutNotFoundError):
+        with pytest.raises(IncorrectWorkoutIdError):
             async with session_factory() as seeder:
                 repo = SQLAlchemyWorkoutRepository(seeder)
                 await repo.update(workout)

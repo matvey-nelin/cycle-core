@@ -2,7 +2,7 @@ from uuid import UUID
 
 from domain.workout.workout import Workout
 from domain.workout.workout_repository import AbstractWorkoutRepository
-from services.exceptions import WorkoutNotFoundError
+from infrastructure.repositories.exceptions import IncorrectWorkoutIdError
 
 
 class FakeWorkoutRepository(AbstractWorkoutRepository):
@@ -24,7 +24,7 @@ class FakeWorkoutRepository(AbstractWorkoutRepository):
             self._buffer[workout.id] = workout
             return workout
         else:
-            raise WorkoutNotFoundError("Workout must be added in repository before saving changes")
+            raise IncorrectWorkoutIdError("Workout must be added in repository before saving changes")
 
     def _save_current_transaction(self):
         self._workouts.update(self._buffer)

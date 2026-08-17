@@ -1,8 +1,8 @@
 import pytest
 
 from domain.workout.workout import Workout
+from infrastructure.repositories.exceptions import IncorrectWorkoutIdError
 from infrastructure.unit_of_work import SQLAlchemyUnitOfWork
-from services.exceptions import WorkoutNotFoundError
 from tests.fakes.fake_unit_of_work import FakeUnitOfWork
 
 
@@ -36,7 +36,7 @@ class TestUnitOfWork:
     async def test_rollback_on_error_with_one_operation(self, double_uow):
         uow: SQLAlchemyUnitOfWork | FakeUnitOfWork = double_uow
 
-        with pytest.raises(WorkoutNotFoundError):
+        with pytest.raises(IncorrectWorkoutIdError):
             async with uow:
                 workout = Workout()
                 await uow.workouts.update(workout)
@@ -88,7 +88,7 @@ class TestUnitOfWork:
     async def test_rollback_on_error_with_two_operation(self, double_uow):
         uow: SQLAlchemyUnitOfWork | FakeUnitOfWork = double_uow
 
-        with pytest.raises(WorkoutNotFoundError):
+        with pytest.raises(IncorrectWorkoutIdError):
             async with uow:
                 first_workout = Workout()
                 uow.workouts.create(first_workout)

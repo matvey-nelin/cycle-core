@@ -8,7 +8,7 @@ from domain.workout.workout import Workout
 from domain.workout.workout_repository import AbstractWorkoutRepository
 from infrastructure.mappers.workout_mapper import WorkoutMapper, WorkoutSetMapper
 from infrastructure.models.workout import WorkoutORM
-from services.exceptions import WorkoutNotFoundError
+from infrastructure.repositories.exceptions import IncorrectWorkoutIdError
 
 
 class SQLAlchemyWorkoutRepository(AbstractWorkoutRepository):
@@ -28,7 +28,7 @@ class SQLAlchemyWorkoutRepository(AbstractWorkoutRepository):
     async def update(self, workout_domain: Workout) -> Workout:
         workout_orm = await self._fetch_orm(workout_domain.id)
         if workout_orm is None:
-            raise WorkoutNotFoundError("Workout must be added in repository before saving changes")
+            raise IncorrectWorkoutIdError("Workout must be added in repository before saving changes")
 
         workout_orm.planned_start_time = workout_domain.planned_start_time
         workout_orm.planned_end_time = workout_domain.planned_end_time
