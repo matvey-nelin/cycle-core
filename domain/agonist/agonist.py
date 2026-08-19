@@ -4,6 +4,8 @@ from uuid import UUID
 
 from uuid6 import uuid7
 
+from domain.exceptions import IncorrectAgonistNameError
+
 
 @dataclass
 class Agonist:
@@ -21,12 +23,12 @@ class Agonist:
         match key:
             case "name":
                 if not isinstance(value, str) or not value.strip():
-                    raise ValueError("Agonist name must be non-empty string value")
+                    raise IncorrectAgonistNameError("Agonist name must be non-empty string value")
 
                 cleaned_value = value.strip()
 
                 if len(cleaned_value) > 100:
-                    raise ValueError("Agonist name length exceeding 100 characters.")
+                    raise IncorrectAgonistNameError("Agonist name length exceeding 100 characters.")
 
                 object.__setattr__(self, key, cleaned_value)
 

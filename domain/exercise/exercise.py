@@ -4,7 +4,7 @@ from uuid import UUID
 
 from uuid6 import uuid7
 
-from domain.exceptions import DuplicateAgonistIdError, NonExistentAgonistIdError
+from domain.exceptions import DuplicateAgonistIdError, IncorrectExerciseNameError, NonExistentAgonistIdError
 
 
 @dataclass
@@ -29,12 +29,12 @@ class Exercise:
         match key:
             case "name":
                 if not isinstance(value, str) or not value.strip():
-                    raise ValueError("Exercise name must be non-empty string value")
+                    raise IncorrectExerciseNameError("Exercise name must be non-empty string value")
 
                 cleaned_value = value.strip()
 
                 if len(cleaned_value) > 100:
-                    raise ValueError("Exercise name length exceeding 100 characters.")
+                    raise IncorrectExerciseNameError("Exercise name length exceeding 100 characters.")
 
                 object.__setattr__(self, key, cleaned_value)
 

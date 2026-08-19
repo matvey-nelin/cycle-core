@@ -5,7 +5,7 @@ from uuid import UUID
 import pytest
 from uuid6 import uuid7
 
-from domain.exceptions import IncorrectWorkoutTimesError
+from domain.exceptions import DomainError, IncorrectOrderValueError, IncorrectRepsValueError, IncorrectWeightValueError, IncorrectWorkoutTimesError
 from domain.workout.workout import Workout, WorkoutSet
 
 DETERMINED_UUID_1: UUID = uuid7()
@@ -33,16 +33,16 @@ def empty_workout_sets():
 
 class TestWorkoutSet:
     @pytest.mark.parametrize(
-        "reps_value, reps_type",
+        "reps_value, reps_type, exception",
         [
-            pytest.param(-1, "planned_reps", id="pass_negative_limit_value_to_planned_reps"),
-            pytest.param(-12345, "planned_reps", id="pass_negative_value_to_planned_reps"),
-            pytest.param(-1, "actual_reps", id="pass_negative_limit_value_to_actual_reps"),
-            pytest.param(-12345, "actual_reps", id="pass_negative_value_to_actual_reps"),
+            pytest.param(-1, "planned_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_limit_value_to_planned_reps"),
+            pytest.param(-12345, "planned_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_value_to_planned_reps"),
+            pytest.param(-1, "actual_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_limit_value_to_actual_reps"),
+            pytest.param(-12345, "actual_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_value_to_actual_reps"),
         ],
     )
-    def test_reps_cannot_be_negative(self, reps_value: int, reps_type: str):
-        with pytest.raises(ValueError):
+    def test_reps_cannot_be_negative(self, reps_value: int, reps_type: str, exception):
+        with exception:
             if reps_type == "planned_reps":
                 WorkoutSet(WORKOUT_UUID, EXERCISE_UUID, 1, planned_reps=reps_value)
 
@@ -70,16 +70,16 @@ class TestWorkoutSet:
             assert workout_set.actual_reps == result_reps_value
 
     @pytest.mark.parametrize(
-        "weight_value, weight_type",
+        "weight_value, weight_type, exception",
         [
-            pytest.param(-1, "planned_weight", id="pass_negative_limit_value_to_planned_weight"),
-            pytest.param(-12345, "planned_weight", id="pass_negative_value_to_planned_weight"),
-            pytest.param(-1, "actual_weight", id="pass_negative_limit_value_to_actual_weight"),
-            pytest.param(-12345, "actual_weight", id="pass_negative_value_to_actual_weight"),
+            pytest.param(-1, "planned_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_limit_value_to_planned_weight"),
+            pytest.param(-12345, "planned_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_value_to_planned_weight"),
+            pytest.param(-1, "actual_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_limit_value_to_actual_weight"),
+            pytest.param(-12345, "actual_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_value_to_actual_weight"),
         ],
     )
-    def test_weight_cannot_be_negative(self, weight_value: int, weight_type: str):
-        with pytest.raises(ValueError):
+    def test_weight_cannot_be_negative(self, weight_value: int, weight_type: str, exception):
+        with exception:
             if weight_type == "planned_weight":
                 WorkoutSet(WORKOUT_UUID, EXERCISE_UUID, 1, planned_weight=weight_value)
 
@@ -139,18 +139,18 @@ class TestWorkoutSet:
         assert workout_set.actual_weight == 0
 
     @pytest.mark.parametrize(
-        "field_name, invalid_value",
+        "field_name, invalid_value, exception",
         [
-            pytest.param("planned_reps", -1, id="negative_planned_reps"),
-            pytest.param("actual_reps", -1, id="negative_actual_reps"),
-            pytest.param("planned_weight", -1, id="negative_planned_weight"),
-            pytest.param("actual_weight", -1, id="negative_actual_weight"),
-            pytest.param("order", 0, id="zero_order"),
+            pytest.param("planned_reps", -1, pytest.raises(IncorrectRepsValueError), id="negative_planned_reps"),
+            pytest.param("actual_reps", -1, pytest.raises(IncorrectRepsValueError), id="negative_actual_reps"),
+            pytest.param("planned_weight", -1, pytest.raises(IncorrectWeightValueError), id="negative_planned_weight"),
+            pytest.param("actual_weight", -1, pytest.raises(IncorrectWeightValueError), id="negative_actual_weight"),
+            pytest.param("order", 0, pytest.raises(IncorrectOrderValueError), id="zero_order"),
         ],
     )
-    def test_validation_on_change_exceptions(self, field_name: str, invalid_value: float):
+    def test_validation_on_change_exceptions(self, field_name: str, invalid_value: float, exception):
         workout_set = WorkoutSet(WORKOUT_UUID, EXERCISE_UUID, 1)
-        with pytest.raises(ValueError):
+        with exception:
             setattr(workout_set, field_name, invalid_value)
 
     @pytest.mark.parametrize(

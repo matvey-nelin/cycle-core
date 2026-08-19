@@ -6,7 +6,13 @@ from uuid import UUID
 
 from uuid6 import uuid7
 
-from domain.exceptions import IncorrectWorkoutSetIdError, IncorrectWorkoutTimesError
+from domain.exceptions import (
+    IncorrectOrderValueError,
+    IncorrectRepsValueError,
+    IncorrectWeightValueError,
+    IncorrectWorkoutSetIdError,
+    IncorrectWorkoutTimesError,
+)
 
 
 @dataclass
@@ -50,27 +56,27 @@ class WorkoutSet:
         match key:
             case "planned_reps":
                 if value < 0:
-                    raise ValueError("The value of reps cannot be negative")
+                    raise IncorrectRepsValueError("The value of reps cannot be negative")
                 object.__setattr__(self, key, int(value))
 
             case "actual_reps":
                 if value < 0:
-                    raise ValueError("The value of reps cannot be negative")
+                    raise IncorrectRepsValueError("The value of reps cannot be negative")
                 object.__setattr__(self, key, int(value))
 
             case "planned_weight":
                 if value < 0:
-                    raise ValueError("The value of weight cannot be negative")
+                    raise IncorrectWeightValueError("The value of weight cannot be negative")
                 object.__setattr__(self, key, float(value))
 
             case "actual_weight":
                 if value < 0:
-                    raise ValueError("The value of weight cannot be negative")
+                    raise IncorrectWeightValueError("The value of weight cannot be negative")
                 object.__setattr__(self, key, float(value))
 
             case "order":
                 if value <= 0:
-                    raise ValueError("The value of order cannot be negative or zero")
+                    raise IncorrectOrderValueError("The value of order cannot be negative or zero")
                 object.__setattr__(self, key, int(value))
 
             case _:

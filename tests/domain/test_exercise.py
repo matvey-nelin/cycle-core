@@ -4,7 +4,7 @@ from uuid import UUID
 import pytest
 from uuid6 import uuid7
 
-from domain.exceptions import DuplicateAgonistIdError, NonExistentAgonistIdError
+from domain.exceptions import DuplicateAgonistIdError, IncorrectExerciseNameError, NonExistentAgonistIdError
 from domain.exercise.exercise import Exercise
 
 DETERMINED_UUID_1 = uuid7()
@@ -24,7 +24,7 @@ class TestExercise:
         ],
     )
     def test_name_cannot_be_empty(self, name: str):
-        with pytest.raises(ValueError):
+        with pytest.raises(IncorrectExerciseNameError):
             Exercise(name)
 
     @pytest.mark.parametrize(
@@ -35,7 +35,7 @@ class TestExercise:
         ],
     )
     def test_name_cannot_exceeding_100_characters(self, name: str):
-        with pytest.raises(ValueError):
+        with pytest.raises(IncorrectExerciseNameError):
             Exercise(name)
 
     @pytest.mark.parametrize(
@@ -88,7 +88,7 @@ class TestExercise:
     )
     def test_name_validation_error_on_change(self, changed_name: str):
         exercise = Exercise("Bench press")
-        with pytest.raises(ValueError):
+        with pytest.raises(IncorrectExerciseNameError):
             exercise.name = changed_name
 
     def test_add_agonist(self):
