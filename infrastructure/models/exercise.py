@@ -18,10 +18,12 @@ class ExerciseORM(Base):
     __tablename__ = "exercises"
 
     id: Mapped[uuid7_pk]
-    name: Mapped[str_100]
+    name: Mapped[str_100] = mapped_column(unique=True)
 
     agonists: Mapped[list["AgonistORM"]] = relationship(
         secondary=ExerciseAgonistORM.__tablename__,
         lazy="raise",
         order_by="AgonistORM.name.asc()",
+        passive_deletes=True,
+        passive_updates=True,
     )

@@ -4,6 +4,7 @@ from uuid import UUID
 import pytest
 from uuid6 import uuid7
 
+from domain.exceptions import DuplicateAgonistIdError, NonExistentAgonistIdError
 from domain.exercise.exercise import Exercise
 
 DETERMINED_UUID_1 = uuid7()
@@ -90,6 +91,63 @@ class TestExercise:
         with pytest.raises(ValueError):
             exercise.name = changed_name
 
+    def test_add_agonist(self):
+        exercise = Exercise("Bench press")
+        exercise.add_agonist(DETERMINED_UUID_1)
+        exercise.add_agonist(DETERMINED_UUID_2)
+        assert exercise.agonist_ids == [DETERMINED_UUID_1, DETERMINED_UUID_2]
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(1, id="int_in_value_of_agonist_id"),
+            pytest.param("string", id="string_in_value_of_agonist_id"),
+            pytest.param([], id="list_in_value_of_agonist_id"),
+        ],
+    )
+    def test_add_agonist_with_incorrect_type_value(self, value: Any):
+        exercise = Exercise("Bench press")
+        with pytest.raises(TypeError):
+            exercise.add_agonist(value)
+
+    def test_add_agonist_with_duplicate(self):
+        exercise = Exercise("Bench press")
+        exercise.add_agonist(DETERMINED_UUID_1)
+        with pytest.raises(DuplicateAgonistIdError):
+            exercise.add_agonist(DETERMINED_UUID_1)
+
+    def test_remove_agonist(self):
+        exercise = Exercise("Bench press")
+        exercise.add_agonist(DETERMINED_UUID_1)
+        exercise.add_agonist(DETERMINED_UUID_2)
+        assert exercise.agonist_ids == [DETERMINED_UUID_1, DETERMINED_UUID_2]
+
+        exercise.remove_agonist(DETERMINED_UUID_1)
+        assert exercise.agonist_ids == [DETERMINED_UUID_2]
+
+        exercise.remove_agonist(DETERMINED_UUID_2)
+        assert exercise.agonist_ids == []
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(1, id="int_in_value_of_agonist_id"),
+            pytest.param("string", id="string_in_value_of_agonist_id"),
+            pytest.param([], id="list_in_value_of_agonist_id"),
+        ],
+    )
+    def test_remove_agonist_with_incorrect_type_value(self, value: Any):
+        exercise = Exercise("Bench press")
+        exercise.add_agonist(DETERMINED_UUID_1)
+        with pytest.raises(TypeError):
+            exercise.remove_agonist(value)
+
+    def test_remove_agonist_with_non_existent_id(self):
+        exercise = Exercise("Bench press")
+        exercise.add_agonist(DETERMINED_UUID_1)
+        with pytest.raises(NonExistentAgonistIdError):
+            exercise.remove_agonist(DETERMINED_UUID_2)
+
     @pytest.mark.parametrize(
         "name, agonist_ids, result_agonist_ids",
         [
@@ -116,65 +174,7 @@ class TestExercise:
             exercise = Exercise(name)
             assert exercise.agonist_ids == result_agonist_ids
         else:
-            exercise = Exercise(name, agonist_ids)
+            exercise = Exercise(name)
+            for agonist_id in agonist_ids:
+                exercise.add_agonist(agonist_id)
             assert exercise.agonist_ids == result_agonist_ids
-
-    @pytest.mark.parametrize(
-        "agonist_ids_value",
-        [
-            pytest.param(1, id="int_in_agonist_ids"),
-            pytest.param([1], id="list_of_integer_in_agonist_ids"),
-            pytest.param(["String", 10], id="list_with_mixed_values_in_agonist_ids"),
-        ],
-    )
-    def test_incorrect_value_of_agonist_ids(self, agonist_ids_value: Any):
-        with pytest.raises(ValueError):
-            Exercise("Bench press", agonist_ids_value)
-
-    @pytest.mark.parametrize(
-        "initial_agonist_ids_value, changed_agonist_ids_value",
-        [
-            pytest.param([DETERMINED_UUID_1], None, id="none_in_changed_agonist_ids"),
-            pytest.param([DETERMINED_UUID_1], 1, id="int_in_changed_agonist_ids"),
-            pytest.param([DETERMINED_UUID_1], [1, 2], id="list_of_integers_in_changed_agonist_ids"),
-            pytest.param(
-                [DETERMINED_UUID_1],
-                ["String", 10],
-                id="list_with_mixed_values_in_changed_agonist_ids",
-            ),
-        ],
-    )
-    def test_agonist_ids_value_changed_to_incorrect_value(
-        self, initial_agonist_ids_value: list[UUID], changed_agonist_ids_value: Any
-    ):
-        exercise = Exercise("Bench press", initial_agonist_ids_value)
-
-        with pytest.raises(ValueError):
-            exercise.agonist_ids = changed_agonist_ids_value
-
-    @pytest.mark.parametrize(
-        "initial_agonist_ids_value, changed_agonist_ids_value, result_agonist_ids_value",
-        [
-            pytest.param(
-                [DETERMINED_UUID_1, DETERMINED_UUID_2, DETERMINED_UUID_3],
-                [],
-                [],
-                id="empty_list_in_changed_agonist_ids",
-            ),
-            pytest.param(
-                [DETERMINED_UUID_1, DETERMINED_UUID_2, DETERMINED_UUID_3],
-                [DETERMINED_UUID_4],
-                [DETERMINED_UUID_4],
-                id="list_with_1_string_in_changed_agonist_ids",
-            ),
-        ],
-    )
-    def test_agonist_ids_value_changed_to_correct_value(
-        self,
-        initial_agonist_ids_value: list[UUID],
-        changed_agonist_ids_value: Any,
-        result_agonist_ids_value: list[UUID],
-    ):
-        exercise = Exercise("Bench press", initial_agonist_ids_value)
-        exercise.agonist_ids = changed_agonist_ids_value
-        assert exercise.agonist_ids == result_agonist_ids_value

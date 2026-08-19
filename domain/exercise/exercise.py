@@ -4,13 +4,23 @@ from uuid import UUID
 
 from uuid6 import uuid7
 
+from domain.exceptions import DuplicateAgonistIdError, NonExistentAgonistIdError
+
 
 @dataclass
 class Exercise:
-    _id: UUID = field(repr=False, init=False, default_factory=uuid7)  # without 'as_type' always returns UUID
+    _id: UUID = field(repr=False, init=False, default_factory=uuid7)
     name: str
 
-    agonist_ids: list[UUID] | None = field(default_factory=list)
+    _agonist_ids: list[UUID] = field(init=False, default_factory=list)
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    @property
+    def agonist_ids(self) -> list[UUID]:
+        return [*self._agonist_ids]
 
     def __repr__(self) -> str:
         return f"{__class__.__name__}({self.id=}, {self.name=})"
@@ -28,15 +38,33 @@ class Exercise:
 
                 object.__setattr__(self, key, cleaned_value)
 
-            case "agonist_ids":
-                if not isinstance(value, list) or not all(isinstance(item, UUID) for item in value):
-                    raise ValueError("'agonist_ids' must be list of the UUID values")
-
-                object.__setattr__(self, key, value)
-
             case _:
                 object.__setattr__(self, key, value)
 
-    @property
-    def id(self) -> UUID:
-        return self._id
+    def add_agonist(self, agonist_id: UUID) -> None:
+        if not isinstance(agonist_id, UUID):
+            raise TypeError("Incorrect type of value 'agonist_id'")
+        if agonist_id in self._agonist_ids:
+            raise DuplicateAgonistIdError("This 'agonist_id' already added")
+        self._agonist_ids.append(agonist_id)
+
+    def remove_agonist(self, agonist_id: UUID) -> None:
+        if not isinstance(agonist_id, UUID):
+            raise TypeError("Incorrect type of value 'agonist_id'")
+        if agonist_id not in self._agonist_ids:
+            raise NonExistentAgonistIdError("This 'agonist_id' not added in exercise")
+        self._agonist_ids.remove(agonist_id)
+
+    @classmethod
+    def reconstruct(
+        cls,
+        id: UUID,
+        name: str,
+        agonist_ids: list[UUID],
+    ) -> "Exercise":
+        """Alternative path to create object of Exercise (for mappers)"""
+        instance = cls.__new__(cls)
+        instance._id = id
+        instance.name = name
+        instance._agonist_ids = agonist_ids
+        return instance

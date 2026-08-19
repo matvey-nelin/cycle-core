@@ -9,6 +9,17 @@ class DomainError(Exception):
         super().__init__(message)
 
 
+class DataIntegrityError(DomainError):
+    """Raised when passed non-existent id of WorkoutSet"""
+
+    error_code = "DATA_INTEGRITY_ERROR"
+    status_code = 400
+
+    def __init__(self, message: str = "Data integrity error") -> None:
+        self.message = message
+        super().__init__(message)
+
+
 class IncorrectWorkoutTimesError(DomainError):
     """Raised when start time of workout exceeds end time of workout"""
 
@@ -31,12 +42,23 @@ class IncorrectWorkoutSetIdError(DomainError):
         super().__init__(message)
 
 
-class DataIntegrityError(DomainError):
-    """Raised when passed non-existent id of WorkoutSet"""
+class DuplicateAgonistIdError(DomainError):
+    """Raised when adds already existing 'agonist_id' in exercise"""
 
-    error_code = "DATA_INTEGRITY_ERROR"
+    error_code = "DUPLICATE_AGONIST_ID"
     status_code = 400
 
-    def __init__(self, message: str = "Data integrity error") -> None:
+    def __init__(self, message: str = "Duplicate 'agonist_id'") -> None:
+        self.message = message
+        super().__init__(message)
+
+
+class NonExistentAgonistIdError(DomainError):
+    """Raised when removes non-existent 'agonist_id' of exercise"""
+
+    error_code = "NON_EXISTENT_AGONIST_ID"
+    status_code = 400
+
+    def __init__(self, message: str = "Non-existent 'agonist_id'") -> None:
         self.message = message
         super().__init__(message)

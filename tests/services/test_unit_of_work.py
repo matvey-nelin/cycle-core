@@ -12,7 +12,7 @@ class TestUnitOfWork:
 
         async with uow:
             workout = Workout()
-            uow.workouts.create(workout)
+            await uow.workouts.create(workout)
             await uow.commit()
 
         async with uow:
@@ -26,7 +26,7 @@ class TestUnitOfWork:
 
         async with uow:
             workout = Workout()
-            uow.workouts.create(workout)
+            await uow.workouts.create(workout)
 
         async with uow:
             committed_workout = await uow.workouts.get_by_id(workout.id)
@@ -52,10 +52,10 @@ class TestUnitOfWork:
 
         async with uow:
             first_workout = Workout()
-            uow.workouts.create(first_workout)
+            await uow.workouts.create(first_workout)
 
             second_workout = Workout()
-            uow.workouts.create(second_workout)
+            await uow.workouts.create(second_workout)
 
             await uow.commit()
 
@@ -73,10 +73,10 @@ class TestUnitOfWork:
 
         async with uow:
             first_workout = Workout()
-            uow.workouts.create(first_workout)
+            await uow.workouts.create(first_workout)
 
             second_workout = Workout()
-            uow.workouts.create(second_workout)
+            await uow.workouts.create(second_workout)
 
         async with uow:
             first_committed_workout = await uow.workouts.get_by_id(first_workout.id)
@@ -91,7 +91,7 @@ class TestUnitOfWork:
         with pytest.raises(IncorrectWorkoutIdError):
             async with uow:
                 first_workout = Workout()
-                uow.workouts.create(first_workout)
+                await uow.workouts.create(first_workout)
 
                 second_workout = Workout()
                 await uow.workouts.update(second_workout)

@@ -17,14 +17,14 @@ EXERCISE_UUID = uuid7()
 
 
 @pytest.fixture
-async def full_workout_in_db(sqlalchemy_repository) -> Workout:
-    repo = sqlalchemy_repository
-
+async def full_workout_in_db(session_factory) -> Workout:
     # Inserting the exercise for data integrity (workout set 'exercise_id' not nullable)
-    await repo.session.execute(
-        text("INSERT INTO exercises (id, name) VALUES (:id, :name)"),
-        {"id": EXERCISE_UUID, "name": "Squat"},
-    )
+    async with session_factory() as seeder:
+        await seeder.execute(
+            text("INSERT INTO exercises (id, name) VALUES (:id, :name)"),
+            {"id": EXERCISE_UUID, "name": "Squat"},
+        )
+        await seeder.commit()
 
     workout = Workout(
         datetime.datetime(2026, 8, 1, 12, 0, 0, tzinfo=datetime.UTC),
@@ -37,8 +37,10 @@ async def full_workout_in_db(sqlalchemy_repository) -> Workout:
     workout.add_set(EXERCISE_UUID, 8, 40, 5, 35)
     workout.add_set(EXERCISE_UUID, 6, 100, 6, 90)
 
-    repo.create(workout)
-    await repo.session.commit()
+    async with session_factory() as seeder:
+        repo = SQLAlchemyWorkoutRepository(seeder)
+        await repo.create(workout)
+        await repo.session.commit()
 
     return workout
 

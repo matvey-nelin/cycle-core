@@ -15,28 +15,28 @@ class SQLAlchemyWorkoutRepository(AbstractWorkoutRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def get_by_id(self, workout_id: UUID) -> Workout | None:
-        workout_orm = await self._fetch_orm(workout_id)
+    async def get_by_id(self, id: UUID) -> Workout | None:
+        workout_orm = await self._fetch_orm(id)
         if workout_orm is None:
             return None
         return WorkoutMapper.to_domain(workout_orm)
 
-    def create(self, workout: Workout) -> None:
+    async def create(self, workout: Workout) -> None:
         workout_orm = WorkoutMapper.to_orm(workout)
         self.session.add(workout_orm)
 
-    async def update(self, workout_domain: Workout) -> Workout:
-        workout_orm = await self._fetch_orm(workout_domain.id)
+    async def update(self, workout: Workout) -> Workout:
+        workout_orm = await self._fetch_orm(workout.id)
         if workout_orm is None:
             raise IncorrectWorkoutIdError("Workout must be added in repository before saving changes")
 
-        workout_orm.planned_start_time = workout_domain.planned_start_time
-        workout_orm.planned_end_time = workout_domain.planned_end_time
-        workout_orm.actual_start_time = workout_domain.actual_start_time
-        workout_orm.actual_end_time = workout_domain.actual_end_time
+        workout_orm.planned_start_time = workout.planned_start_time
+        workout_orm.planned_end_time = workout.planned_end_time
+        workout_orm.actual_start_time = workout.actual_start_time
+        workout_orm.actual_end_time = workout.actual_end_time
 
         orm_sets = {wset.id: wset for wset in workout_orm.sets}
-        domain_sets = {wset.id: wset for wset in workout_domain.sets}
+        domain_sets = {wset.id: wset for wset in workout.sets}
 
         for dset_id, dset in domain_sets.items():
             if dset_id in orm_sets:

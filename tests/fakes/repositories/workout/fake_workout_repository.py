@@ -16,7 +16,7 @@ class FakeWorkoutRepository(AbstractWorkoutRepository):
             workout = self._workouts.get(id)
         return workout
 
-    def create(self, workout: Workout) -> None:
+    async def create(self, workout: Workout) -> None:
         self._buffer[workout.id] = workout
 
     async def update(self, workout: Workout) -> Workout:

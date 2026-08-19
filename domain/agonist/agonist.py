@@ -7,8 +7,12 @@ from uuid6 import uuid7
 
 @dataclass
 class Agonist:
-    _id: UUID = field(repr=False, init=False, default_factory=uuid7)  # without 'as_type' always returns UUID
+    _id: UUID = field(repr=False, init=False, default_factory=uuid7)
     name: str
+
+    @property
+    def id(self) -> UUID:
+        return self._id
 
     def __repr__(self) -> str:
         return f"{__class__.__name__}({self.id=}, {self.name=})"
@@ -29,6 +33,14 @@ class Agonist:
             case _:
                 object.__setattr__(self, key, value)
 
-    @property
-    def id(self) -> UUID:
-        return self._id
+    @classmethod
+    def reconstract(
+        cls,
+        id: UUID,
+        name: str,
+    ) -> "Agonist":
+        """Alternative path to create object of Agonist (for mappers)"""
+        instance = cls.__new__(cls)
+        instance._id = id
+        instance.name = name
+        return instance

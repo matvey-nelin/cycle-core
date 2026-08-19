@@ -28,7 +28,7 @@ class WorkoutService:
                 actual_start_time=start_time,
                 actual_end_time=end_time,
             )
-            self.uow.workouts.create(workout)
+            await self.uow.workouts.create(workout)
             await self.uow.commit()
         return workout.id
 
