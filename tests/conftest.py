@@ -3,13 +3,16 @@ from contextlib import asynccontextmanager
 
 import pytest_asyncio
 from dotenv import load_dotenv
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from api.dependencies import get_agonist_service, get_exercise_service, get_workout_service
 from infrastructure.models import Base
-from infrastructure.repositories.agonist.sqlalchemy_agonist_repository import SQLAlchemyAgonistRepository
-from infrastructure.repositories.exercise.sqlalchemy_exercise_repository import SQLAlchemyExerciseRepository
-from infrastructure.repositories.workout.sqlalchemy_workout_repository import SQLAlchemyWorkoutRepository
 from infrastructure.unit_of_work import SQLAlchemyUnitOfWork
+from main import app
+from services.agonist_service import AgonistService
+from services.exercise_service import ExerciseService
+from services.workout_service import WorkoutService
 from tests.fakes.fake_unit_of_work import FakeUnitOfWork
 
 load_dotenv()
@@ -42,24 +45,6 @@ async def session_factory():
         yield factory
 
 
-@pytest_asyncio.fixture
-async def sqlalchemy_workout_repository(session_factory):
-    async with session_factory() as session:
-        yield SQLAlchemyWorkoutRepository(session)
-
-
-@pytest_asyncio.fixture
-async def sqlalchemy_agonist_repository(session_factory):
-    async with session_factory() as session:
-        yield SQLAlchemyAgonistRepository(session)
-
-
-@pytest_asyncio.fixture
-async def sqlalchemy_exercise_repository(session_factory):
-    async with session_factory() as session:
-        yield SQLAlchemyExerciseRepository(session)
-
-
 @pytest_asyncio.fixture(params=["real", "fake"], ids=["REAL", "FAKE"])
 async def double_uow(request):
     if request.param == "real":
@@ -67,3 +52,21 @@ async def double_uow(request):
             yield SQLAlchemyUnitOfWork(session_factory=factory)
     else:
         yield FakeUnitOfWork()
+
+
+@pytest_asyncio.fixture(params=["REAL", "FAKE"])
+async def client(request, session_factory):
+    if request.param == "REAL":
+        app.dependency_overrides[get_workout_service] = lambda: WorkoutService(SQLAlchemyUnitOfWork(session_factory))
+        app.dependency_overrides[get_exercise_service] = lambda: ExerciseService(SQLAlchemyUnitOfWork(session_factory))
+        app.dependency_overrides[get_agonist_service] = lambda: AgonistService(SQLAlchemyUnitOfWork(session_factory))
+    else:
+        fake_uow = FakeUnitOfWork()
+        app.dependency_overrides[get_workout_service] = lambda: WorkoutService(fake_uow)
+        app.dependency_overrides[get_exercise_service] = lambda: ExerciseService(fake_uow)
+        app.dependency_overrides[get_agonist_service] = lambda: AgonistService(fake_uow)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        yield client
+
+    app.dependency_overrides.clear()

@@ -1,11 +1,10 @@
 import datetime
 from uuid import UUID
 
-from domain.exceptions import IncorrectWorkoutSetIdError
 from domain.workout.workout import Workout
-from infrastructure.repositories.exceptions import IncorrectWorkoutIdError
+from infrastructure.repositories.exceptions import IncorrectExerciseIdError
 from services.abstract_unit_of_work import AbstractUnitOfWork
-from services.exceptions import WorkoutNotFoundError, WorkoutSetNotFoundError
+from services.exceptions import ExerciseNotFoundError, WorkoutNotFoundError
 
 
 class WorkoutService:
@@ -32,7 +31,7 @@ class WorkoutService:
             await self.uow.commit()
         return workout.id
 
-    async def create_workout_set(
+    async def add_workout_set(
         self,
         workout_id: UUID,
         exercise_id: UUID,
@@ -51,25 +50,20 @@ class WorkoutService:
             try:
                 await self.uow.workouts.update(workout)
                 await self.uow.commit()
-            except IncorrectWorkoutIdError as _ex:
-                raise WorkoutNotFoundError(_ex.message)
+            except IncorrectExerciseIdError as _ex:
+                raise ExerciseNotFoundError(_ex.message)
         return workout.sets[-1].id
 
     async def remove_workout_set(self, workout_id: UUID, workout_set_id: UUID) -> None:
         async with self.uow:
             workout = await self._get_workout_or_raise(workout_id)
-            try:
-                workout.remove_set(workout_set_id)
-                await self.uow.workouts.update(workout)
-                await self.uow.commit()
-            except IncorrectWorkoutSetIdError:
-                raise WorkoutSetNotFoundError()
-            except IncorrectWorkoutIdError as _ex:
-                raise WorkoutNotFoundError(_ex.message)
+            workout.remove_set(workout_set_id)
+            await self.uow.workouts.update(workout)
+            await self.uow.commit()
 
     async def _get_workout_or_raise(self, workout_id: UUID) -> Workout:
         """Method-helper without context"""
         workout = await self.uow.workouts.get_by_id(workout_id)
         if workout is None:
-            raise WorkoutNotFoundError("Passed incorrect id")
+            raise WorkoutNotFoundError()
         return workout

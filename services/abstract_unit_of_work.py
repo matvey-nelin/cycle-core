@@ -1,9 +1,13 @@
 import abc
 
+from domain.agonist.agonist_repository import AbstractAgonistRepository
+from domain.exercise.exercise_repository import AbstractExerciseRepository
 from domain.workout.workout_repository import AbstractWorkoutRepository
 
 
 class AbstractUnitOfWork(abc.ABC):
+    agonists: AbstractAgonistRepository
+    exercises: AbstractExerciseRepository
     workouts: AbstractWorkoutRepository
 
     def __init__(self) -> None: ...

@@ -10,12 +10,13 @@ class TestAgonistRepository:
     async def test_create(
         self,
         session_factory,
-        sqlalchemy_agonist_repository,
     ):
         agonist = Agonist("Pectoralis major")
-        repo: SQLAlchemyAgonistRepository = sqlalchemy_agonist_repository
-        await repo.create(agonist)
-        await repo.session.commit()
+
+        async with session_factory() as seeder:
+            repo = SQLAlchemyAgonistRepository(seeder)
+            await repo.create(agonist)
+            await seeder.commit()
 
         async with session_factory() as seeder:
             created_agonist: Agonist = (
@@ -29,12 +30,12 @@ class TestAgonistRepository:
     async def test_get_by_id_with_existent_agonist(
         self,
         session_factory,
-        sqlalchemy_agonist_repository,
     ):
         agonist = Agonist("Pectoralis major")
-        repo: SQLAlchemyAgonistRepository = sqlalchemy_agonist_repository
-        await repo.create(agonist)
-        await repo.session.commit()
+        async with session_factory() as seeder:
+            repo = SQLAlchemyAgonistRepository(seeder)
+            await repo.create(agonist)
+            await seeder.commit()
 
         async with session_factory() as reader:
             repo = SQLAlchemyAgonistRepository(reader)
@@ -47,13 +48,14 @@ class TestAgonistRepository:
     async def test_get_by_non_existent_id_with_filled_database(
         self,
         session_factory,
-        sqlalchemy_agonist_repository,
     ):
         added_agonist = Agonist("Pectoralis major")
         non_added_agonist = Agonist("Pectoralis minor")
-        repo: SQLAlchemyAgonistRepository = sqlalchemy_agonist_repository
-        await repo.create(added_agonist)
-        await repo.session.commit()
+
+        async with session_factory() as seeder:
+            repo = SQLAlchemyAgonistRepository(seeder)
+            await repo.create(added_agonist)
+            await seeder.commit()
 
         async with session_factory() as reader:
             repo = SQLAlchemyAgonistRepository(reader)
@@ -64,10 +66,8 @@ class TestAgonistRepository:
     async def test_get_by_non_existent_id_with_empty_database(
         self,
         session_factory,
-        sqlalchemy_agonist_repository,
     ):
         non_added_agonist = Agonist("Pectoralis minor")
-        repo: SQLAlchemyAgonistRepository = sqlalchemy_agonist_repository
 
         async with session_factory() as reader:
             repo = SQLAlchemyAgonistRepository(reader)
@@ -78,12 +78,13 @@ class TestAgonistRepository:
     async def test_update(
         self,
         session_factory,
-        sqlalchemy_agonist_repository,
     ):
         agonist = Agonist("Pectoralis major")
-        repo: SQLAlchemyAgonistRepository = sqlalchemy_agonist_repository
-        await repo.create(agonist)
-        await repo.session.commit()
+
+        async with session_factory() as seeder:
+            repo = SQLAlchemyAgonistRepository(seeder)
+            await repo.create(agonist)
+            await seeder.commit()
 
         agonist.name = "Pectoralis minor"
 

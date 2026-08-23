@@ -5,6 +5,9 @@ from domain.exceptions import DataIntegrityError
 from infrastructure.repositories.agonist.sqlalchemy_agonist_repository import (
     SQLAlchemyAgonistRepository,
 )
+from infrastructure.repositories.exercise.sqlalchemy_exercise_repository import (
+    SQLAlchemyExerciseRepository,
+)
 from infrastructure.repositories.workout.sqlalchemy_workout_repository import (
     SQLAlchemyWorkoutRepository,
 )
@@ -17,8 +20,9 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
 
     async def __aenter__(self) -> "SQLAlchemyUnitOfWork":
         self.session = self.session_factory()
-        self.workouts = SQLAlchemyWorkoutRepository(self.session)
         self.agonists = SQLAlchemyAgonistRepository(self.session)
+        self.exercises = SQLAlchemyExerciseRepository(self.session)
+        self.workouts = SQLAlchemyWorkoutRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:

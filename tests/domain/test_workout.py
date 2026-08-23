@@ -1,16 +1,17 @@
 import datetime
 from contextlib import nullcontext as does_not_raise
-from uuid import UUID
 
 import pytest
 from uuid6 import uuid7
 
-from domain.exceptions import DomainError, IncorrectOrderValueError, IncorrectRepsValueError, IncorrectWeightValueError, IncorrectWorkoutTimesError
+from domain.exceptions import (
+    IncorrectOrderValueError,
+    IncorrectRepsValueError,
+    IncorrectWeightValueError,
+    IncorrectWorkoutTimesError,
+)
 from domain.workout.workout import Workout, WorkoutSet
 
-DETERMINED_UUID_1: UUID = uuid7()
-DETERMINED_UUID_2: UUID = uuid7()
-DETERMINED_UUID_3: UUID = uuid7()
 WORKOUT_UUID = uuid7()
 EXERCISE_UUID = uuid7()
 
@@ -35,10 +36,21 @@ class TestWorkoutSet:
     @pytest.mark.parametrize(
         "reps_value, reps_type, exception",
         [
-            pytest.param(-1, "planned_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_limit_value_to_planned_reps"),
-            pytest.param(-12345, "planned_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_value_to_planned_reps"),
-            pytest.param(-1, "actual_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_limit_value_to_actual_reps"),
-            pytest.param(-12345, "actual_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_value_to_actual_reps"),
+            pytest.param(
+                -1,
+                "planned_reps",
+                pytest.raises(IncorrectRepsValueError),
+                id="pass_negative_limit_value_to_planned_reps",
+            ),
+            pytest.param(
+                -12345, "planned_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_value_to_planned_reps"
+            ),
+            pytest.param(
+                -1, "actual_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_limit_value_to_actual_reps"
+            ),
+            pytest.param(
+                -12345, "actual_reps", pytest.raises(IncorrectRepsValueError), id="pass_negative_value_to_actual_reps"
+            ),
         ],
     )
     def test_reps_cannot_be_negative(self, reps_value: int, reps_type: str, exception):
@@ -72,10 +84,30 @@ class TestWorkoutSet:
     @pytest.mark.parametrize(
         "weight_value, weight_type, exception",
         [
-            pytest.param(-1, "planned_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_limit_value_to_planned_weight"),
-            pytest.param(-12345, "planned_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_value_to_planned_weight"),
-            pytest.param(-1, "actual_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_limit_value_to_actual_weight"),
-            pytest.param(-12345, "actual_weight", pytest.raises(IncorrectWeightValueError), id="pass_negative_value_to_actual_weight"),
+            pytest.param(
+                -1,
+                "planned_weight",
+                pytest.raises(IncorrectWeightValueError),
+                id="pass_negative_limit_value_to_planned_weight",
+            ),
+            pytest.param(
+                -12345,
+                "planned_weight",
+                pytest.raises(IncorrectWeightValueError),
+                id="pass_negative_value_to_planned_weight",
+            ),
+            pytest.param(
+                -1,
+                "actual_weight",
+                pytest.raises(IncorrectWeightValueError),
+                id="pass_negative_limit_value_to_actual_weight",
+            ),
+            pytest.param(
+                -12345,
+                "actual_weight",
+                pytest.raises(IncorrectWeightValueError),
+                id="pass_negative_value_to_actual_weight",
+            ),
         ],
     )
     def test_weight_cannot_be_negative(self, weight_value: int, weight_type: str, exception):

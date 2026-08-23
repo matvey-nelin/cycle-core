@@ -7,7 +7,7 @@ from infrastructure.repositories.exceptions import IncorrectAgonistIdError
 
 class FakeAgonistRepository(AbstractAgonistRepository):
     def __init__(self, agonists: dict[UUID, Agonist] | None = None) -> None:
-        self._agonists = {**agonists} if agonists else {}
+        self._agonists = agonists if agonists is not None else {}
         self._buffer = {}
 
     async def get_by_id(self, id: UUID) -> Agonist | None:
