@@ -20,12 +20,23 @@ class WorkoutNotFoundError(ServiceError):
         super().__init__(message)
 
 
-class WorkoutSetNotFoundError(ServiceError):
-    """Raised when service layer cannot found the workout set by id"""
+class AgonistNotFoundError(ServiceError):
+    """Raised when service layer cannot found the agonist by id"""
 
-    error_code = "WORKOUT_SET_NOT_FOUND"
+    error_code = "AGONIST_NOT_FOUND"
     status_code = 404
 
-    def __init__(self, message: str = "Workout set not found") -> None:
+    def __init__(self, message: str = "Agonist not found") -> None:
+        self.message = message
+        super().__init__(message)
+
+
+class ExerciseNotFoundError(ServiceError):
+    """Raised when service layer cannot found the exercise by id"""
+
+    error_code = "EXERCISE_NOT_FOUND"
+    status_code = 404
+
+    def __init__(self, message: str = "Exercise not found") -> None:
         self.message = message
         super().__init__(message)

@@ -12,8 +12,10 @@ class AbstractWorkoutRepository(ABC):
         """Returns Workout domain object by passed id"""
 
     @abstractmethod
-    def create(self, workout: Workout) -> None:
+    async def create(self, workout: Workout) -> None:
         """Adds a new workout in repository"""
 
-    async def update(self, workout: Workout) -> Workout | None:
+    @abstractmethod
+    async def update(self, workout: Workout) -> Workout:
         """Save changes in existent Workout"""
+        ...

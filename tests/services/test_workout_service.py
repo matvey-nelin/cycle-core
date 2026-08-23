@@ -1,38 +1,45 @@
 import datetime
 
 import pytest
-from sqlalchemy import text
 from uuid6 import uuid7
 
+from domain.exceptions import (
+    IncorrectRepsValueError,
+    IncorrectWeightValueError,
+    IncorrectWorkoutSetIdError,
+    IncorrectWorkoutTimesError,
+)
+from domain.exercise.exercise import Exercise
 from domain.workout.workout import Workout, WorkoutSet
-from services.exceptions import WorkoutNotFoundError, WorkoutSetNotFoundError
+from services.abstract_unit_of_work import AbstractUnitOfWork
+from services.exceptions import ExerciseNotFoundError, WorkoutNotFoundError
 from services.workout_service import WorkoutService
-
-DETERMINED_UUID_1 = uuid7()
-DETERMINED_UUID_2 = uuid7()
-DETERMINED_UUID_3 = uuid7()
-EXERCISE_UUID = uuid7()
 
 
 @pytest.fixture
-async def exercise(sqlalchemy_repository):
-    repo = sqlalchemy_repository
+async def exercise(double_uow):
+    uow: AbstractUnitOfWork = double_uow
+    exercise = Exercise("Squat")
 
     # Inserting the exercise for data integrity (workout set 'exercise_id' not nullable)
-    await repo.session.execute(
-        text("INSERT INTO exercises (id, name) VALUES (:id, :name)"),
-        {"id": EXERCISE_UUID, "name": "Squat"},
-    )
-    await repo.session.commit()
+    async with uow:
+        await uow.exercises.create(exercise)
+        await uow.commit()
+
+    return exercise
+
+
+@pytest.fixture
+def service(double_uow):
+    uow: AbstractUnitOfWork = double_uow
+    return WorkoutService(uow)
 
 
 class TestWorkoutService:
     async def test_create_workout(
         self,
-        double_uow,
+        service,
     ):
-        service = WorkoutService(double_uow)
-
         workout = Workout(
             datetime.datetime(2026, 8, 1, 12, 00, 00, tzinfo=datetime.UTC),
             datetime.datetime(2026, 8, 1, 13, 00, 00, tzinfo=datetime.UTC),
@@ -54,23 +61,57 @@ class TestWorkoutService:
         assert created_workout.actual_start_time == workout.actual_start_time
         assert created_workout.actual_end_time == workout.actual_end_time
 
-    async def test_create_workout_set(
+    async def test_create_workout_with_incorrect_workout_times_error(
         self,
-        double_uow,
+        service,
+    ):
+        with pytest.raises(IncorrectWorkoutTimesError):
+            await service.create_workout(
+                datetime.datetime(2026, 8, 20, 13, 00, 00),
+                datetime.datetime(2026, 8, 20, 12, 00, 00),
+            )
+
+    async def test_get_workout(
+        self,
+        service,
         exercise,
     ):
-        service = WorkoutService(double_uow)
+        created_workout_id = await service.create_workout()
+        await service.add_workout_set(created_workout_id, exercise.id, 8, 60)
+        await service.add_workout_set(created_workout_id, exercise.id, 12, 52)
+        await service.add_workout_set(created_workout_id, exercise.id, 6, 100)
 
+        workout = await service.get_workout(created_workout_id)
+
+        assert workout.planned_tonnage == 1704
+        assert workout.actual_tonnage == 1704
+        assert workout.completion_percentage == 100
+
+    async def test_get_workout_with_workout_not_found_error(
+        self,
+        service,
+    ):
+        non_added_workout = Workout()
+        await service.create_workout()
+
+        with pytest.raises(WorkoutNotFoundError):
+            await service.get_workout(non_added_workout.id)
+
+    async def test_add_workout_set(
+        self,
+        service,
+        exercise,
+    ):
         workout_id = await service.create_workout()
 
         # Creating workout sets with service and manually
-        await service.create_workout_set(workout_id, EXERCISE_UUID, 8, 60)
-        await service.create_workout_set(workout_id, EXERCISE_UUID, 12, 52)
+        await service.add_workout_set(workout_id, exercise.id, 8, 60)
+        await service.add_workout_set(workout_id, exercise.id, 12, 52)
 
         workout = await service.get_workout(workout_id)
 
-        workout_set1 = WorkoutSet(workout_id, EXERCISE_UUID, 1, 8, 60, 8, 60)
-        workout_set2 = WorkoutSet(workout_id, EXERCISE_UUID, 2, 12, 52, 12, 52)
+        workout_set1 = WorkoutSet(workout_id, exercise.id, 1, 8, 60, 8, 60)
+        workout_set2 = WorkoutSet(workout_id, exercise.id, 2, 12, 52, 12, 52)
 
         # Asserting that created with service workout sets symetric with manually workout sets
         for index, workout_set in enumerate([workout_set1, workout_set2]):
@@ -82,63 +123,46 @@ class TestWorkoutService:
             assert workout.sets[index].planned_tonnage == workout_set.planned_tonnage
             assert workout.sets[index].actual_tonnage == workout_set.actual_tonnage
 
-    async def test_create_workout_set_exception(
+    async def test_add_workout_set_with_workout_not_found_error(
         self,
-        double_uow,
+        service,
         exercise,
     ):
-        service = WorkoutService(double_uow)
         non_added_workout = Workout()
 
         # Testing raising exception with non added workout
         with pytest.raises(WorkoutNotFoundError):
-            await service.create_workout_set(non_added_workout.id, EXERCISE_UUID)
+            await service.add_workout_set(non_added_workout.id, exercise.id)
 
-    async def test_get_workout(
+    async def test_add_workout_set_with_incorrect_reps_value_error(self, service, exercise):
+        workout_id = await service.create_workout()
+        with pytest.raises(IncorrectRepsValueError):
+            await service.add_workout_set(workout_id, exercise.id, -1, 60)
+
+    async def test_add_workout_set_with_incorrect_weight_value_error(self, service, exercise):
+        workout_id = await service.create_workout()
+        with pytest.raises(IncorrectWeightValueError):
+            await service.add_workout_set(workout_id, exercise.id, 6, -60)
+
+    async def test_add_workout_set_with_exercise_not_found_error(
         self,
-        double_uow,
-        exercise,
+        service,
     ):
-        service = WorkoutService(double_uow)
-
-        created_workout_id = await service.create_workout()
-        await service.create_workout_set(created_workout_id, EXERCISE_UUID, 8, 60)
-        await service.create_workout_set(created_workout_id, EXERCISE_UUID, 12, 52)
-        await service.create_workout_set(created_workout_id, EXERCISE_UUID, 6, 100)
-
-        workout = await service.get_workout(created_workout_id)
-
-        assert workout.planned_tonnage == 1704
-        assert workout.actual_tonnage == 1704
-        assert workout.completion_percentage == 100
-
-    async def test_get_workout_exception(
-        self,
-        double_uow,
-    ):
-        service = WorkoutService(double_uow)
-        non_added_workout = Workout()
-
-        # Added just first workout
-        await service.create_workout()
-
-        # Testing raising exception with non added workout
-        with pytest.raises(WorkoutNotFoundError):
-            await service.get_workout(non_added_workout.id)
+        workout_id = await service.create_workout()
+        with pytest.raises(ExerciseNotFoundError):
+            await service.add_workout_set(workout_id, uuid7())
 
     async def test_remove_workout_set(
         self,
-        double_uow,
+        service,
         exercise,
     ):
-        service = WorkoutService(double_uow)
-
         # Create workout with sets
         created_workout_id = await service.create_workout()
 
-        first_set_id = await service.create_workout_set(created_workout_id, EXERCISE_UUID, 8, 60)
-        second_set_id = await service.create_workout_set(created_workout_id, EXERCISE_UUID, 12, 52)
-        third_set_id = await service.create_workout_set(created_workout_id, EXERCISE_UUID, 6, 100)
+        first_set_id = await service.add_workout_set(created_workout_id, exercise.id, 8, 60)
+        second_set_id = await service.add_workout_set(created_workout_id, exercise.id, 12, 52)
+        third_set_id = await service.add_workout_set(created_workout_id, exercise.id, 6, 100)
 
         created_workout = await service.get_workout(created_workout_id)
 
@@ -148,29 +172,25 @@ class TestWorkoutService:
         # Delete second workout set and added fourth workout set
         await service.remove_workout_set(created_workout_id, second_set_id)
 
-        fourth_set_id = await service.create_workout_set(created_workout_id, EXERCISE_UUID, 6, 100)
+        fourth_set_id = await service.add_workout_set(created_workout_id, exercise.id, 6, 100)
         created_workout = await service.get_workout(created_workout_id)
 
         assert [first_set_id, third_set_id, fourth_set_id] == [wset.id for wset in created_workout.sets]
         assert [1, 2, 3] == [wset.order for wset in created_workout.sets]
 
-    async def test_remove_workout_set_exception_workout_not_found(
+    async def test_remove_workout_set_with_workout_not_found(
         self,
-        double_uow,
+        service,
     ):
-        service = WorkoutService(double_uow)
-
         with pytest.raises(WorkoutNotFoundError):
             await service.remove_workout_set(uuid7(), uuid7())
 
-    async def test_remove_workout_set_exception_workout_set_not_found(
+    async def test_remove_workout_set_with_incorrect_workout_set_id_error(
         self,
-        double_uow,
+        service,
     ):
-        service = WorkoutService(double_uow)
-
         # Create workout with sets
         created_workout_id = await service.create_workout()
 
-        with pytest.raises(WorkoutSetNotFoundError):
+        with pytest.raises(IncorrectWorkoutSetIdError):
             await service.remove_workout_set(created_workout_id, uuid7())

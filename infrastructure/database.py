@@ -4,5 +4,5 @@ from infrastructure.config import settings
 from infrastructure.models import Base  # noqa: F401
 
 if settings.DATABASE_URL is not None:
-    engine = create_async_engine(settings.DATABASE_URL, echo=True)
+    engine = create_async_engine(settings.DATABASE_URL, echo=False)
     AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

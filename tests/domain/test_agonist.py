@@ -1,6 +1,7 @@
 import pytest
 
 from domain.agonist.agonist import Agonist
+from domain.exceptions import IncorrectAgonistNameError
 
 
 class TestAgonist:
@@ -14,7 +15,7 @@ class TestAgonist:
         ],
     )
     def test_name_cannot_be_empty(self, name: str):
-        with pytest.raises(ValueError):
+        with pytest.raises(IncorrectAgonistNameError):
             Agonist(name)
 
     @pytest.mark.parametrize(
@@ -25,7 +26,7 @@ class TestAgonist:
         ],
     )
     def test_name_cannot_exceeding_100_characters(self, name: str):
-        with pytest.raises(ValueError):
+        with pytest.raises(IncorrectAgonistNameError):
             Agonist(name)
 
     @pytest.mark.parametrize(
@@ -93,5 +94,5 @@ class TestAgonist:
     )
     def test_name_validation_error_on_change(self, changed_name: str):
         agonist = Agonist("Pectoralis major")
-        with pytest.raises(ValueError):
+        with pytest.raises(IncorrectAgonistNameError):
             agonist.name = changed_name
