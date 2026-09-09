@@ -2,7 +2,7 @@
 
 Бэкенд-сервис для учета тренировок. Построен по принципам гексагональной архитектуры: доменная логика изолирована от веб-фреймворка и базы данных.
 
-[![Tests](https://github.com/matvey-nelin/cycle-core/actions/workflows/push_pr_test.yml/badge.svg)](https://github.com/matvey-nelin/cycle-core/actions/workflows/push_pr_test.yml)
+[![Tests](https://github.com/matvey-nelin/cycle-core/actions/workflows/tests.yml/badge.svg)](https://github.com/matvey-nelin/cycle-core/actions/workflows/tests.yml)
 [![Coverage](docs/coverage.svg)](docs/coverage.svg)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688.svg)](https://fastapi.tiangolo.com/)
@@ -68,5 +68,6 @@ pytest --cov=api --cov=domain --cov=services --cov=infrastructure
 В репозитории настроен GitHub Actions (.github/workflows/push_pr_test.yml). При каждом пуше в main или создании Pull Request пайплайн:
 1. Поднимает PostgreSQL 16 в сервис-контейнере.
 2. Устанавливает зависимости и применяет миграции Alembic.
-3. Запускает весь набор тестов.
+3. **Pull Request (`tests.yml`)**: запуск тестов с PostgreSQL 16 и сохранение отчета о покрытии.
+4. **Merge в `main` (`badge.yml`)**: обновление бейджа покрытия `docs/coverage.svg` без повторного прогона тестов.
 Ветка main защищена (Branch Protection): мерж невозможен, если CI-пайплайн завершился с ошибкой.
